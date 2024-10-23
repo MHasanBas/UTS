@@ -1,66 +1,57 @@
-<form action="{{ url('/stok/import_ajax') }}" method="POST" id="form-import" enctype="multipart/form-data">
+<form action="{{ url('/profile_ajax') }}" method="POST" id="form-profile" enctype="multipart/form-data">
     @csrf
-    <div id="modal-master" class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Import Data Stok</h5>
+                <h5 class="modal-title">Upload Profile Picture</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label>Download Template</label>
-                    <a href="{{ asset('template_stok.xlsx') }}" class="btn btn-info btn-sm" download>
-                        <i class="fa fa-file-excel"></i> Download
-                    </a>
-                    <small id="error-kategori_id" class="error-text form-text text-danger"></small>
-                </div>
-                <div class="form-group">
-                    <label>Pilih File</label>
-                    <input type="file" name="file_stok" id="file_stok" class="form-control" required>
-                    <small id="error-file_stok" class="error-text form-text text-danger"></small>
+                    <label for="file_pfp">Select File</label>
+                    <input type="file" name="file_pfp" id="file_pfp" class="form-control" required>
+                    <small id="error-file_pfp" class="error-text form-text text-danger"></small>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" data-dismiss="modal" class="btn btn-warning">Batal</button>
+                <button type="button" data-dismiss="modal" class="btn btn-warning">Cancel</button>
                 <button type="submit" class="btn btn-primary">Upload</button>
             </div>
         </div>
     </div>
 </form>
-
 <script>
     $(document).ready(function() {
-        $("#form-import").validate({
+        $("#form-profile").validate({
             rules: {
-                file_stok: {
+                file_pfp: { 
                     required: true,
-                    extension: "xlsx"
-                },
+                    extension: "jpg|jpeg|png" 
+                }
             },
             submitHandler: function(form) {
-                var formData = new FormData(form);  // Jadikan form ke FormData untuk menghandle file
-
+                var formData = new FormData(form); 
                 $.ajax({
                     url: form.action,
                     type: form.method,
-                    data: formData,     // Data yang dikirim berupa FormData
-                    processData: false, // setting processData dan contentType ke false, untuk menghandle file
-                    contentType: false,
+                    data: formData,
+                    processData: false, 
+                    contentType: false, 
                     success: function(response) {
-                        if (response.status) { // jika sukses
-                            $('#myModal').modal('hide');
+                        if (response.status) { 
+                            $('#myModal').modal('hide'); 
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Berhasil',
                                 text: response.message
                             });
-                            dataStok.ajax.reload(); // reload datatable
-                        } else { // jika error
-                            $('.error-text').text('');
+                            $('.nav-item.dropdown img').attr('src', response.newProfilePicturePath);
+                        } else { 
+                            $('.error-text').text(''); 
                             $.each(response.msgField, function(prefix, val) {
-                                $('#error-' + prefix).text(val[0]);
+                                $('#error-' + prefix).text(val[0]); 
                             });
                             Swal.fire({
                                 icon: 'error',
@@ -68,9 +59,16 @@
                                 text: response.message
                             });
                         }
+                    },
+                    error: function(xhr) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Terjadi Kesalahan',
+                            text: 'Failed to upload the profile picture. Please try again.'
+                        });
                     }
                 });
-                return false;
+                return false; 
             },
             errorElement: 'span',
             errorPlacement: function(error, element) {

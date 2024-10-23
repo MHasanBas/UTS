@@ -5,9 +5,10 @@
         <div class="card-header">
             <h3 class="card-title">Daftar Stok</h3>
             <div class="card-tools">
-                <a class="btn btn-sm btn-primary mt-1" href="{{ url('stok/create') }}">Tambah</a>
-                <a href="{{ url('/stok/export_pdf') }}" class="btn btn-warning"><i class="fa fa-file-pdf"></i> Export Stok</a>
+                <button onclick="modalAction('{{ url('/stok/import') }}')" class="btn btn-info">Import Stok</button>
+                <a href="{{ url('/stok/export_excel') }}" class="btn btn-primary"><i class="fa fa-file-excel"></i> Export Stok</a>
                 <button onclick="modalAction('{{ url('/stok/create_ajax') }}')" class="btn btn-success">Tambah Data (Ajax)</button>
+                <a href="{{ url('/stok/export_pdf') }}" class="btn btn-warning"><i class="fa fa-file-pdf"></i> Export Stok</a>
             </div>
         </div>
         <div class="card-body">
@@ -64,19 +65,19 @@
                         orderable: false,
                         searchable: false
                     }, {
-                        data: "supplier.supplier_nama",  // Menggunakan supplier_nama
+                        data: "supplier.supplier_nama", 
                         className: "",
                         width: "10%",
                         orderable: true,
                         searchable: true
                     }, {
-                        data: "barang.barang_nama",  // Menggunakan barang_nama
+                        data: "barang.barang_nama", 
                         className: "",
                         width: "37%",
                         orderable: true,
                         searchable: true,
                     }, {
-                        data: "user.nama",  // Menggunakan nama user
+                        data: "user.nama",
                         className: "",
                         width: "10%",
                         orderable: true,
@@ -91,11 +92,11 @@
                             if (data) {
                                 var date = new Date(data);
                                 var year = date.getFullYear();
-                                var month = ("0" + (date.getMonth() + 1)).slice(-2); // Tambahkan nol di depan
-                                var day = ("0" + date.getDate()).slice(-2); // Tambahkan nol di depan
-                                return year + "-" + month + "-" + day; // Format sebagai YYYY-MM-DD
+                                var month = ("0" + (date.getMonth() + 1)).slice(-2);
+                                var day = ("0" + date.getDate()).slice(-2);
+                                return year + "-" + month + "-" + day;
                             }
-                            return data; // Kembalikan nilai asli jika tidak ada data
+                            return data; 
                         }
                     }, {
                         data: "stok_jumlah",

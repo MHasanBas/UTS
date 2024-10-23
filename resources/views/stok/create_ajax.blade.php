@@ -12,9 +12,9 @@
                 <div class="form-group">
                     <label>Supplier</label>
                     <select name="supplier_id" id="supplier_id" class="form-control" required>
-                        <option value="">- Pilih Suplier -</option>
-                        @foreach ($supplier as $l)
-                            <option value="{{ $l->supplier_id }}">{{ $l->supplier_nama }}</option>
+                        <option value="">- Pilih Supplier -</option>
+                        @foreach ($supplier as $s)
+                            <option value="{{ $s->supplier_id }}">{{ $s->supplier_nama }}</option>
                         @endforeach
                     </select>
                     <small id="error-supplier_id" class="error-text form-text text-danger"></small>
@@ -23,8 +23,8 @@
                     <label>Barang</label>
                     <select name="barang_id" id="barang_id" class="form-control" required>
                         <option value="">- Pilih Barang -</option>
-                        @foreach ($barang as $l)
-                            <option value="{{ $l->barang_id }}">{{ $l->barang_nama }}</option>
+                        @foreach ($barang as $b)
+                            <option value="{{ $b->barang_id }}">{{ $b->barang_nama }}</option>
                         @endforeach
                     </select>
                     <small id="error-barang_id" class="error-text form-text text-danger"></small>
@@ -33,8 +33,8 @@
                     <label>User</label>
                     <select name="user_id" id="user_id" class="form-control" required>
                         <option value="">- Pilih User -</option>
-                        @foreach ($user as $l)
-                            <option value="{{ $l->user_id }}">{{ $l->name }}</option>
+                        @foreach ($user as $u)
+                            <option value="{{ $u->user_id }}">{{ $u->nama }}</option>
                         @endforeach
                     </select>
                     <small id="error-user_id" class="error-text form-text text-danger"></small>
@@ -90,7 +90,7 @@
                     data: $(form).serialize(),
                     success: function(response) {
                         if (response.status) {
-                            $('#myModal').modal('hide'); // Ganti dengan ID modal yang sesuai
+                            $('#myModal').modal('hide'); 
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Berhasil',
@@ -108,17 +108,9 @@
                                 text: response.message
                             });
                         }
-                    },
-                    error: function(xhr, status, error) {
-                        // Handle AJAX error here (optional)
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Terjadi Kesalahan',
-                            text: 'Silakan coba lagi.'
-                        });
                     }
                 });
-                return false; // Prevent default form submission
+                return false; 
             },
             errorElement: 'span',
             errorPlacement: function(error, element) {

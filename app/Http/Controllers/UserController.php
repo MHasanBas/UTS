@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\LevelModel as ModelsLevelModel;
 use App\Models\UserModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Yajra\DataTables\DataTables;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\LevelModel;
 use Illuminate\Database\QueryException;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class UserController extends Controller
 {
@@ -29,7 +30,7 @@ class UserController extends Controller
         $activeMenu = 'user';
 
         // Ambil data level
-        $level = ModelsLevelModel::all();
+        $level = LevelModel::all();
 
         return view('user.index', ['breadcrumb' => $breadcrumb, 'page' => $page, 'level' => $level, 'activeMenu' => $activeMenu]);
     }
@@ -70,7 +71,7 @@ class UserController extends Controller
             'title' => 'Tambah user baru'
         ];
 
-        $level = ModelsLevelModel::all();
+        $level = LevelModel::all();
         $activeMenu = 'user';
 
         return view('user.create', compact('breadcrumb', 'page', 'level', 'activeMenu'));
@@ -116,7 +117,7 @@ class UserController extends Controller
     public function edit(string $id)
     {
         $user = UserModel::findOrFail($id);
-        $levels = ModelsLevelModel::all();
+        $levels = LevelModel::all();
 
         $breadcrumb = (object) [
             'title' => 'Edit User',
@@ -172,7 +173,7 @@ class UserController extends Controller
     // Jobsheet 6
     public function create_ajax()
     {
-        $level = ModelsLevelModel::select('level_id', 'level_nama')->get();
+        $level = LevelModel::select('level_id', 'level_nama')->get();
         return view('user.create_ajax')->with('level', $level);
     }
 
@@ -213,14 +214,14 @@ class UserController extends Controller
     public function edit_ajax(string $id)
     {
         $user = UserModel::find($id);
-        $level = ModelsLevelModel::select('level_id', 'level_nama')->get();
+        $level = LevelModel::select('level_id', 'level_nama')->get();
         return view('user.edit_ajax', ['user' => $user, 'level' => $level]);
     }
 
     public function show_ajax(string $id)
     {
         $user = UserModel::find($id);
-        $level = ModelsLevelModel::all();
+        $level = LevelModel::all();
 
         return view('user.show_ajax', ['user' => $user, 'level' => $level]);
     }
@@ -293,6 +294,235 @@ class UserController extends Controller
         return redirect('/');
     }
 
+    public function profile()
+    {
+        // Membuat objek breadcrumb yang berisi judul dan daftar breadcrumb untuk halaman profil.
+        $breadcrumb = (object) [
+            'title' => 'Profil Anda', // Judul yang akan ditampilkan di breadcrumb.
+            'list'  => ['Home', 'Profile'] // Rangkaian breadcrumb: Home -> Profile.
+        ];
+    
+        // Menentukan menu yang aktif pada sidebar (menu 'profile').
+        $activeMenu = 'profile';
+    
+        // Mengembalikan view 'profile.index' dengan mengirim variabel breadcrumb dan activeMenu.
+        return view('profile.index', ['breadcrumb' => $breadcrumb, 'activeMenu' => $activeMenu]);
+    }
+    
+    public function showChangePhotoForm()
+    {
+        // Mengembalikan view yang berisi form untuk mengubah foto profil pengguna.
+        return view('profile.change_photo');
+    }
+    
+    public function showManageProfileForm()
+    {
+        // Mengembalikan view yang berisi form untuk mengelola profil pengguna (username, nama, password).
+        return view('profile.manage');
+    }
+    
+    public function updatePhoto(Request $request)
+    {
+        // Mengecek apakah request yang diterima adalah melalui AJAX atau berformat JSON.
+        if ($request->ajax() || $request->wantsJson()) {
+            
+            // Menentukan aturan validasi untuk file foto profil yang diupload.
+            $rules = [
+                'file_pfp' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', 
+                // file_pfp harus berupa file gambar dengan format jpeg, png, jpg, atau gif, dan maksimal 2MB.
+            ];
+    
+            // Melakukan validasi request berdasarkan aturan yang ditentukan.
+            $validator = Validator::make($request->all(), $rules);
+    
+            // Jika validasi gagal:
+            if ($validator->fails()) {
+                // Mengembalikan respon JSON dengan status gagal dan pesan error untuk setiap field yang tidak valid.
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Validasi Gagal',
+                    'msgField' => $validator->errors(), // Pesan kesalahan spesifik pada setiap field.
+                ]);
+            }
+    
+            // Mendapatkan file gambar dari request yang diupload oleh pengguna.
+            $file = $request->file('file_pfp');
+    
+            // Membuat nama file unik berdasarkan timestamp dan nama asli file.
+            $filename = time() . '_' . $file->getClientOriginalName();
+    
+            // Menentukan path tempat penyimpanan file gambar di server.
+            $path = public_path('images/pfp');
+    
+            // Memindahkan file yang diupload ke folder tujuan.
+            $file->move($path, $filename);
+    
+            // Mengambil data pengguna yang sedang login dari database.
+            $user = UserModel::findOrFail(auth()->user()->user_id);
+    
+            // Mengupdate kolom avatar pengguna dengan nama file baru.
+            $user->avatar = $filename;
+    
+            // Menyimpan perubahan data pengguna ke database.
+            $user->save();
+    
+            // Mengembalikan respon JSON dengan status berhasil dan path gambar baru.
+            return response()->json([
+                'status' => true,
+                'message' => 'Foto profil berhasil diupload',
+                'newProfilePicturePath' => asset('images/pfp/' . $filename), // Path gambar baru untuk di-refresh di UI.
+            ]);
+        }
+    }
+    
+    public function updateProfile(Request $request)
+    {
+        // Mengecek apakah request yang diterima adalah melalui AJAX atau berformat JSON.
+        if ($request->ajax() || $request->wantsJson()) {
+            
+            // Menentukan aturan validasi untuk username, nama, dan password pengguna.
+            $rules = [
+                'username' => 'required|string|max:50|unique:m_user,username,' . auth()->user()->user_id . ',user_id',
+                // Username harus unik di tabel m_user, kecuali untuk pengguna yang sedang login.
+                'nama' => 'required|string|max:100', // Nama harus diisi, maksimal 100 karakter.
+                'password' => 'nullable|string|min:6', // Password bersifat opsional, minimal 6 karakter jika diisi.
+            ];
+    
+            // Melakukan validasi terhadap data yang diinput oleh pengguna.
+            $validator = Validator::make($request->all(), $rules);
+    
+            // Jika validasi gagal:
+            if ($validator->fails()) {
+                // Mengembalikan respon JSON dengan status gagal dan pesan error.
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Validasi Gagal',
+                    'msgField' => $validator->errors(), // Pesan kesalahan spesifik pada setiap field yang tidak valid.
+                ]);
+            }
+    
+            // Mengambil data pengguna yang sedang login dari database.
+            $user = UserModel::findOrFail(auth()->user()->user_id);
+    
+            // Mengupdate kolom username dengan nilai yang baru dari request.
+            $user->username = $request->username;
+    
+            // Mengupdate kolom nama dengan nilai yang baru dari request.
+            $user->nama = $request->nama;
+    
+            // Jika pengguna menginput password baru, maka password akan di-hash menggunakan bcrypt.
+            if ($request->password) {
+                $user->password = bcrypt($request->password);
+            }
+    
+            // Menyimpan perubahan data pengguna ke database.
+            $user->save();
+    
+            // Mengembalikan respon JSON dengan status berhasil dan pesan sukses.
+            return response()->json([
+                'status' => true,
+                'message' => 'Profil berhasil diperbarui',
+            ]);
+        }
+    }
+    
+
+    public function import_ajax(Request $request)
+    {
+        if ($request->ajax() || $request->wantsJson()) {
+            $rules = [
+                // validasi file harus xls atau xlsx, max 1MB
+                'file_user' => ['required', 'mimes:xlsx', 'max:1024']
+            ];
+            $validator = Validator::make($request->all(), $rules);
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Validasi Gagal',
+                    'msgField' => $validator->errors()
+                ]);
+            }
+            $file = $request->file('file_user'); // ambil file dari request
+            $reader = IOFactory::createReader('Xlsx'); // load reader file excel
+            $reader->setReadDataOnly(true); // hanya membaca data
+            $spreadsheet = $reader->load($file->getRealPath()); // load file excel
+            $sheet = $spreadsheet->getActiveSheet(); // ambil sheet yang aktif
+            $data = $sheet->toArray(null, false, true, true); // ambil data excel
+            $insert = [];
+            if (count($data) > 1) { // jika data lebih dari 1 baris
+                foreach ($data as $baris => $value) {
+                    if ($baris > 1) { // baris ke 1 adalah header, maka lewati
+                        $password = !empty($value['D']) ? bcrypt($value['D']) : null; // hash password jika ada
+                        $insert[] = [
+                            'level_id' => $value['A'],
+                            'username' => $value['B'],
+                            'nama' => $value['C'],
+                            'password' => $password, // simpan password yang sudah dihash
+                            'created_at' => now(),
+                        ];
+                    }
+                }
+                if (count($insert) > 0) {
+                    // insert data ke database, jika data sudah ada, maka diabaikan
+                    UserModel::insertOrIgnore($insert);
+                }
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Data berhasil diimport'
+                ]);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Tidak ada data yang diimport'
+                ]);
+            }
+        }
+        return redirect('/');
+    }
+    public function export_excel()
+    {
+        // ambil data level yang akan di export
+        $user = UserModel::select('level_id', 'username', 'nama', 'password')
+            ->orderBy('level_id')
+            ->with('level')
+            ->get();
+        // load library excel
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();    // ambil sheet yang aktif
+        $sheet->setCellValue('A1', 'No');
+        $sheet->setCellValue('B1', 'Username');
+        $sheet->setCellValue('C1', 'Nama');
+        $sheet->setCellValue('D1', 'Password');
+        $sheet->setCellValue('E1', 'Level');
+        $sheet->getStyle('A1:E1')->getFont()->setBold(true);    // bold header
+        $no = 1;        // nomor data dimulai dari 1
+        $baris = 2;     // baris data dimulai dari baris ke 2
+        foreach ($user as $key => $value) {
+            $sheet->setCellValue('A' . $baris, $no);
+            $sheet->setCellValue('B' . $baris, $value->username);
+            $sheet->setCellValue('C' . $baris, $value->nama);
+            $sheet->setCellValue('D' . $baris, $value->password);
+            $sheet->setCellValue('E' . $baris, $value->level->level_nama);
+            $baris++;
+            $no++;
+        }
+        foreach (range('A', 'E') as $columnID) {
+            $sheet->getColumnDimension($columnID)->setAutoSize(true);   // set auto size untuk kolom
+        }
+        $sheet->setTitle('Data User'); // set title sheet
+        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $filename = 'Data User ' . date('Y-m-d H:i:s') . '.xlsx';
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+        header('Cache-Control: max-age=1');
+        header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+        header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
+        header('Cache-Control: cache, must-revalidate');
+        header('Pragma: public');
+        $writer->save('php://output');
+        exit;
+    }
     public function export_pdf()
     {
         $user = UserModel::select('level_id', 'username', 'nama')

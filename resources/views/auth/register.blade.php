@@ -16,19 +16,142 @@
     <link rel="stylesheet" href="{{ asset('adminlte/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css') }}">
     <!-- Theme style -->
     <link rel="stylesheet" href="{{ asset('adminlte/dist/css/adminlte.min.css') }}">
+    
+    <style>
+        /* Background Image */
+        body {
+            background-image: url('../images/dua.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Source Sans Pro', sans-serif;
+            position: relative;
+        }
+
+        /* Overlay */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+
+        .login-box {
+            position: relative;
+            z-index: 2;
+            width: 400px;
+            background-color: rgba(255, 255, 255, 0.85); /* Transparansi */
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+        }
+
+        .card-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .card-header .h1 {
+            font-size: 2rem;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .login-box-msg {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .form-control {
+            border-radius: 20px;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ccc;
+            color: #333;
+        }
+
+        .form-control:focus {
+            border-color: #6a11cb;
+            background-color: rgba(255, 255, 255, 1);
+        }
+
+        .input-group-text {
+            border-radius: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #333;
+            border: 1px solid #ccc;
+        }
+
+        .btn-primary {
+            background-color: #21722e;
+            border-radius: 20px;
+            border: none;
+            font-size: 16px;
+            padding: 10px 30px;
+            width: 130%;
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+
+        .custom-select {
+        font-size: 16px;
+        padding: 10px;
+        height: auto; /* Supaya lebih fleksibel */
+    }
+
+        .btn-primary:hover {
+            background-color: #2575fc;
+        }
+
+        .icheck-primary {
+            color: #333;
+        }
+
+        .text-center {
+            color: #333;
+        }
+
+        a {
+            color: #6a11cb;
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: #2575fc;
+        }
+
+        .error-text {
+            color: #ff5c5c;
+            font-size: 12px;
+        }
+    </style>
 </head>
 
 <body class="hold-transition login-page">
     <div class="login-box">
-        <!-- /.login-logo -->
-        <div class="card card-outline card-primary">
-            <div class="card-header text-center"><a href="{{ url('/') }}" class="h1"><b>Admin</b>LTE</a></div>
+        <div class="card">
+            <div class="card-header text-center">
+                <img src="{{ asset('images/logo.png') }}" alt="Logo" style="max-width: 150px; margin-bottom: 20px;">
+                <a href="{{ url('/') }}" class="h1"><b></b></a>
+            </div>
             <div class="card-body">
                 <p class="login-box-msg">Registrasi Pengguna Baru</p>
                 <form method="POST" action="{{ url('register') }}" id="form-register">
                     @csrf
                     <div class="input-group mb-3">
-                        <select class="form-control" id="level_id" name="level_id" required>
+                        <select class="form-control custom-select" id="level_id" name="level_id" required>
                             <option value="">- Pilih Level -</option>
                             @foreach ($level as $item)
                                 <option value="{{ $item->level_id }}">{{ $item->level_nama }}</option>
@@ -76,14 +199,13 @@
                             <small class="form-text text-danger">{{ $message }}</small>
                         @enderror
                     </div>
-                  
-                        <!-- /.col -->
+
+                    <div class="row">
                         <div class="col-4">
-                            <button type="submit" class="btn btn-primary btn-block">Registrasi</button>
+                            <button type="submit" class="btn btn-primary btn-block">Register</button>
                         </div>
-                        <!-- /.col -->
                     </div>
-                    <!-- Tambahan untuk teks login -->
+                    
                     <div class="row mt-2">
                         <div class="col-12 text-center">
                             <p>Sudah punya akun? <a href="{{ url('login') }}">Login</a></p>
@@ -91,11 +213,8 @@
                     </div>
                 </form>
             </div>
-            <!-- /.card-body -->
         </div>
-        <!-- /.card -->
     </div>
-    <!-- /.login-box -->
 
     <!-- jQuery -->
     <script src="{{ asset('adminlte/plugins/jquery/jquery.min.js') }}"></script>

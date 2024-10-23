@@ -44,7 +44,7 @@
                         </tr>
                         <tr>
                             <th class="text-right col-3">Nama User :</th>
-                            <td class="col-9">{{ $stok->user->name }}</td>
+                            <td class="col-9">{{ $stok->user->nama }}</td>
                         </tr>
                         <tr>
                             <th class="text-right col-3">Stok Tanggal :</th>
@@ -66,7 +66,7 @@
     <script>
         $(document).ready(function() {
             $("#form-delete").validate({
-                rules: {}, // Tidak ada validasi karena ini adalah penghapusan
+                rules: {}, 
                 submitHandler: function(form) {
                     $.ajax({
                         url: form.action,
@@ -74,7 +74,7 @@
                         data: $(form).serialize(),
                         success: function(response) {
                             if (response.status) {
-                                $('#myModal').modal('hide'); // Ganti dengan ID modal yang sesuai
+                                $('#myModal').modal('hide'); 
                                 Swal.fire({
                                     icon: 'success',
                                     title: 'Berhasil',
@@ -82,7 +82,6 @@
                                 });
                                 tableStok.ajax.reload();
                             } else {
-                                // Hapus kesalahan dari tampilan jika ada
                                 $('.error-text').text('');
                                 $.each(response.msgField, function(prefix, val) {
                                     $('#error-' + prefix).text(val[0]);
@@ -93,17 +92,9 @@
                                     text: response.message
                                 });
                             }
-                        },
-                        error: function(xhr, status, error) {
-                            // Handle AJAX error here (optional)
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Terjadi Kesalahan',
-                                text: 'Silakan coba lagi.'
-                            });
                         }
                     });
-                    return false; // Prevent default form submission
+                    return false; 
                 },
                 errorElement: 'span',
                 errorPlacement: function(error, element) {

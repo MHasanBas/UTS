@@ -137,10 +137,12 @@
     <div class="login-box">
         <div class="card">
             <div class="card-header text-center">
-                <a href="{{ url('/') }}" class="h1"><b>My</b>App</a>
+                <!-- Tambahkan logo di sini -->
+                <img src="{{ asset('images/logo.png') }}" alt="Logo" style="max-width: 150px; margin-bottom: 20px;">
+                <a href="{{ url('/') }}" class="h1"><b></b></a>
             </div>
             <div class="card-body">
-                <p class="login-box-msg">Sign in to start your session</p>
+                <p class="login-box-msg">Masuk dengan akun anda</p>
                 <form action="{{ url('login') }}" method="POST" id="form-login">
                     @csrf
                     <div class="input-group mb-3">
@@ -213,13 +215,13 @@
                         maxlength: 20
                     }
                 },
-                submitHandler: function(form) { // ketika valid, maka bagian yg akan dijalankan 
+                submitHandler: function(form) {
                     $.ajax({
                         url: form.action,
                         type: form.method,
                         data: $(form).serialize(),
                         success: function(response) {
-                            if (response.status) { // jika sukses 
+                            if (response.status) {
                                 Swal.fire({
                                     icon: 'success',
                                     title: 'Berhasil',
@@ -227,7 +229,7 @@
                                 }).then(function() {
                                     window.location = response.redirect;
                                 });
-                            } else { // jika error 
+                            } else {
                                 $('.error-text').text('');
                                 $.each(response.msgField, function(prefix, val) {
                                     $('#error-' + prefix).text(val[0]);
